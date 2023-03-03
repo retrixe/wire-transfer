@@ -1,0 +1,10 @@
+# The port to listen on.
+port = 14776
+
+[https]
+# Whether or not to enable HTTPS.
+enabled = false
+# Path to HTTPS certificate.
+cert = ""
+# Path to HTTPS private key.
+key = ""
