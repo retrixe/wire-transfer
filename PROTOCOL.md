@@ -54,13 +54,13 @@ All request/response bodies use JSON.
 
 ### GET /info
 
-**Request:**
+**Request Parameters:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | `token` | `string` | The token to download the file. |
 
-**Response:**
+**Response Body:**
 
 This endpoint may return 404 if the file is not available.
 
@@ -75,13 +75,13 @@ This endpoint may return 404 if the file is not available.
 
 ### GET /download/direct
 
-**Request:**
+**Request Parameters:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | `token` | `string` | The token to download the file. |
 
-**Response:**
+**Response Body:**
 
 This endpoint may return 404 if the file is not available, or 400 if the file is not available for direct transfer.
 
@@ -95,7 +95,15 @@ This endpoint may return 404 if the file is not available, or 400 if the file is
 
 ### GET /download/proxied
 
-**Request:**
+**Request Parameters:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `token` | `string` | The token to send to the server when connecting for proxied transfer. |
+
+**Response Body:**
+
+This endpoint may return 404 if the file is not available, or 400 if the file is not available for proxied transfer.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -103,14 +111,6 @@ This endpoint may return 404 if the file is not available, or 400 if the file is
 | `size` | `number` | The size of the file, in bytes. |
 | `hash` | `string` | The SHA256 hash of the file. |
 | `token` | `string` | The token to download the file. |
-
-**Response:**
-
-This endpoint may return 404 if the file is not available, or 400 if the file is not available for proxied transfer.
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| `token` | `string` | The token to send to the server when connecting for proxied transfer. |
 
 ## UDP Protocol API
 
