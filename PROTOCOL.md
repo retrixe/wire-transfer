@@ -118,7 +118,7 @@ The UDP protocol is used for transferring files.
 
 Packets are sent as a single UDP datagram. The first byte of the datagram is the packet type, followed by the packet data. When encryption is enabled, the contents of the packet are encrypted with AES-128-CBC.
 
-### Type 0x00: Handshake
+### Type 0x00: Handshake Request
 
 The handshake packet is sent by the downloader to the uploader or server to initiate a transfer. This is also sent by the uploader to the server when requested for a proxied transfer. **Note: Encryption fields are not present when this is sent by an uploader to a proxy server!**
 
@@ -131,6 +131,46 @@ The handshake packet is sent by the downloader to the uploader or server to init
 | `shared_secret` | `string` (optional) | The shared secret to use for encryption, encrypted with the uploader's public key. Only present when `encryption` is set to `true`. |
 | `iv` | `string` (optional) | The initialization vector to use for encryption, encrypted with the uploader's public key. Only present when `encryption` is set to `true`. |
 
-### Type 0x01: File Data
+### Type 0x00: Handshake Response
 
-WIP
+This packet is sent by the uploader in response to a handshake.
+
+**Packet Data:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `success` | `boolean` | Whether or not the handshake was successful. |
+
+### Type 0x01: Request File Piece
+
+This packet is sent by the downloader to the uploader to request a piece of the file.
+
+**Packet Data:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `piece` | `number` | The piece number to request. |
+| `request_data` | `boolean` | Whether or not to request the data of the piece. |
+
+### Type 0x01: File Piece Info
+
+This packet is sent by the uploader to the downloader to send information about a piece of the file.
+
+**Packet Data:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `piece` | `number` | The piece number of the file. |
+| `hash` | `string` | The SHA256 hash of the piece. |
+
+### Type 0x02: File Piece Data
+
+This packet is sent by the uploader to the downloader to send a piece of the file.
+
+**Packet Data:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `piece` | `number` | The piece number of the file. |
+| `offset` | `number` | The offset of the data being received within the piece. |
+| `data` | `byte[]` | The data of the piece. |
