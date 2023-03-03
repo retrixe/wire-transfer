@@ -33,6 +33,8 @@ All request/response bodies use JSON.
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | `name` | `string` | The name of the file to upload. |
+| `size` | `number` | The size of the file, in bytes. |
+| `hash` | `string` | The SHA256 hash of the file. |
 | `public_key` | `string` (optional) | The Ed25519 public key of the uploader. |
 | `port` | `number` (optional) | The port on which the uploader is listening for direct transfers. |
 
@@ -48,6 +50,27 @@ All request/response bodies use JSON.
 | ---- | ---- | ----------- |
 | `proxy_token` | `string` | The token to send to the server when connecting for proxied transfer. |
 
+### GET /info
+
+**Request:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `token` | `string` | The token to download the file. |
+
+**Response:**
+
+This endpoint may return 404 if the file is not available.
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `name` | `string` | The name of the file. |
+| `size` | `number` | The size of the file, in bytes. |
+| `hash` | `string` | The SHA256 hash of the file. |
+| `available` | `boolean` | Whether the file is available. |
+| `supports_direct` | `boolean` | Whether the file is available for direct transfer. |
+| `supports_proxied` | `boolean` | Whether the file is available for proxied transfer. |
+
 ### GET /download/direct
 
 **Request:**
@@ -62,6 +85,9 @@ This endpoint may return 404 if the file is not available, or 400 if the file is
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| `name` | `string` | The name of the file. |
+| `size` | `number` | The size of the file, in bytes. |
+| `hash` | `string` | The SHA256 hash of the file. |
 | `ip` | `string` | The IP address of the uploader. |
 | `port` | `number` | The port on which the uploader is listening for direct transfers. |
 
@@ -71,6 +97,9 @@ This endpoint may return 404 if the file is not available, or 400 if the file is
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| `name` | `string` | The name of the file. |
+| `size` | `number` | The size of the file, in bytes. |
+| `hash` | `string` | The SHA256 hash of the file. |
 | `token` | `string` | The token to download the file. |
 
 **Response:**
