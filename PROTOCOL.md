@@ -22,6 +22,86 @@ This mode is primarily aimed at users which don't support or enable port forward
 
 In proxied transfer mode, the requesting client makes a request at `/download/proxied`. If proxied transfer is supported by the uploader, the server generates a token and sends it to the uploader. The uploader then connects via UDP and sends the token, following which the server responds to the requester's HTTP request with the temporary token. The requester then connects to the server via UDP and sends the token. The server then relays the file between the uploader and the requester. The uploader and downloader are responsible for encrypting and decrypting the file, and the server is responsible for relaying the file.
 
-## UDP Transfer Protocol
+## HTTP API
+
+All request/response bodies use JSON.
+
+### WS /upload
+
+**Request:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `name` | `string` | The name of the file to upload. |
+| `public_key` | `string` (optional) | The Ed25519 public key of the uploader. |
+| `port` | `number` (optional) | The port on which the uploader is listening for direct transfers. |
+
+**Response:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `token` | `string` | The token which can be used to download the file. |
+
+**Clientbound Request for Proxied Transfer:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `proxy_token` | `string` | The token to send to the server when connecting for proxied transfer. |
+
+### GET /download/direct
+
+**Request:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `token` | `string` | The token to download the file. |
+
+**Response:**
+
+This endpoint may return 404 if the file is not available, or 400 if the file is not available for direct transfer.
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `ip` | `string` | The IP address of the uploader. |
+| `port` | `number` | The port on which the uploader is listening for direct transfers. |
+
+### GET /download/proxied
+
+**Request:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `token` | `string` | The token to download the file. |
+
+**Response:**
+
+This endpoint may return 404 if the file is not available, or 400 if the file is not available for proxied transfer.
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `token` | `string` | The token to send to the server when connecting for proxied transfer. |
+
+## UDP Protocol API
+
+The UDP protocol is used for transferring files.
+
+### Packet Format
+
+Packets are sent as a single UDP datagram. The first byte of the datagram is the packet type, followed by the packet data. When encryption is enabled, the contents of the packet are encrypted with AES-128-CBC.
+
+### Type 0x00: Handshake
+
+The handshake packet is sent by the downloader to the uploader or server to initiate a transfer. This is also sent by the uploader to the server when requested for a proxied transfer. **Note: Encryption fields are not present when this is sent by an uploader to a proxy server!**
+
+**Packet Data:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `token` | `string` | The token to download the file. In case of direct transfers, this is the download token. In case of proxied transfers, this is the proxying token, from which the download token can be inferred by the proxies/uploaders/downloaders. |
+| `encryption` | `boolean` | Whether or not to enable encryption. This is not present when an uploader connects to a proxy server. |
+| `shared_secret` | `string` (optional) | The shared secret to use for encryption, encrypted with the uploader's public key. Only present when `encryption` is set to `true`. |
+| `iv` | `string` (optional) | The initialization vector to use for encryption, encrypted with the uploader's public key. Only present when `encryption` is set to `true`. |
+
+### Type 0x01: File Data
 
 WIP
