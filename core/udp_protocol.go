@@ -19,7 +19,7 @@ var (
 )
 
 type Packet struct {
-	Id     uint32
+	ID     uint32
 	Data   []byte
 	Parsed interface{}
 }
@@ -55,7 +55,7 @@ type FilePieceData struct {
 
 func (packet *Packet) Serialize() []byte {
 	data := make([]byte, 4+len(packet.Data))
-	binary.LittleEndian.PutUint32(data[:4], packet.Id)
+	binary.LittleEndian.PutUint32(data[:4], packet.ID)
 	copy(data[4:], packet.Data)
 	return data
 }
@@ -71,7 +71,7 @@ func CreateHandshakeRequest(token string, encrypt bool, sharedSecret []byte, iv 
 		copy(data[16+1+1+n+len(token):], iv)
 	}
 	return &Packet{
-		Id:   0x00,
+		ID:   0x00,
 		Data: data,
 	}
 }
@@ -81,7 +81,7 @@ func CreateHandshakeResponse(success bool, encrypt bool) *Packet {
 	data[0] = boolToInt(success)
 	data[1] = boolToInt(encrypt)
 	return &Packet{
-		Id:   0x00,
+		ID:   0x00,
 		Data: data,
 	}
 }
@@ -91,21 +91,21 @@ func ParsePacket(data []byte) (*Packet, error) {
 		return nil, errors.New("invalid packet")
 	}
 	packet := &Packet{}
-	packet.Id = binary.LittleEndian.Uint32(data[:4])
+	packet.ID = binary.LittleEndian.Uint32(data[:4])
 	packet.Data = data[4:]
 	return packet, nil
 }
 
 func ParsePacketData(packet *Packet, from PacketFrom) error {
 	if from == PacketFromDownloader {
-		switch packet.Id {
+		switch packet.ID {
 		case 0x00:
 			return parseHandshakeRequest(packet)
 		case 0x01:
 			return parseRequestFilePiece(packet)
 		}
 	} else if from == PacketFromUploader {
-		switch packet.Id {
+		switch packet.ID {
 		case 0x00:
 			return parseHandshakeResponse(packet)
 		case 0x01:
