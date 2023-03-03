@@ -184,3 +184,9 @@ This packet is sent by the uploader to the downloader to send a piece of the fil
 | `piece` | `uint32` | The piece number of the file. |
 | `offset` | `uint32` | The offset of the data being received within the piece. |
 | `data` | `byte[]` | The data of the piece. |
+
+### 0x03: Close
+
+This packet can be sent by the downloader to formally close the connection. This packet is not required to be sent, and the connection will be closed after a timeout (the reference implementation defaults to 30 seconds). However, using this saves resources.
+
+**Packet Data:** N/A
