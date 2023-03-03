@@ -37,12 +37,14 @@ All request/response bodies use JSON.
 | `hash` | `string` | The SHA256 hash of the file. |
 | `public_key` | `string` (optional) | The Ed25519 public key of the uploader. |
 | `port` | `number` (optional) | The port on which the uploader is listening for direct transfers. |
+| `precache` | `boolean` (optional) | Hint to the server to try pre-cache the file. Pre-caching is not required for servers to implement. The reference implementation pre-caches by default. If you wish to avoid pre-caching as a client, set this to false explicitly. |
 
 **Response:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | `token` | `string` | The token which can be used to download the file. |
+| `precache` | `boolean` | Whether the file will be precached by the server. |
 
 **Clientbound Request for Proxied Transfer:**
 
@@ -118,6 +120,14 @@ The UDP protocol is used for transferring files.
 
 Packets are sent as a single UDP datagram. The first byte of the datagram is the packet type, followed by the packet data. When encryption is enabled, the contents of the packet are encrypted with AES-128-CBC.
 
+### Data Types
+
+| Type | Description |
+| ---- | ----------- |
+| `boolean` | A single byte, either `0x00` or `0x01`. |
+| `string` | The length of the string encoded as a Protocol Buffer VarInt, followed by the string in UTF-8 encoded bytes. |
+| `byte[]` | The length of the byte array encoded as a Protocol Buffer VarInt, followed by the byte array. |
+
 ### Type 0x00: Handshake Request
 
 The handshake packet is sent by the downloader to the uploader or server to initiate a transfer. This is also sent by the uploader to the server when requested for a proxied transfer. **Note: Encryption fields are not present when this is sent by an uploader to a proxy server!**
@@ -143,13 +153,13 @@ This packet is sent by the uploader in response to a handshake.
 
 ### Type 0x01: Request File Piece
 
-This packet is sent by the downloader to the uploader to request a piece of the file.
+This packet is sent by the downloader to the uploader to request a piece of the file. Each piece is 2048 KB in size.
 
 **Packet Data:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| `piece` | `number` | The piece number to request. |
+| `piece` | `uint32` | The piece number to request. |
 | `request_data` | `boolean` | Whether or not to request the data of the piece. |
 
 ### Type 0x01: File Piece Info
@@ -160,8 +170,8 @@ This packet is sent by the uploader to the downloader to send information about 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| `piece` | `number` | The piece number of the file. |
-| `hash` | `string` | The SHA256 hash of the piece. |
+| `piece` | `uint32` | The piece number of the file. |
+| `hash` | `byte[]` | The SHA256 hash of the piece. |
 
 ### Type 0x02: File Piece Data
 
@@ -171,6 +181,6 @@ This packet is sent by the uploader to the downloader to send a piece of the fil
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| `piece` | `number` | The piece number of the file. |
-| `offset` | `number` | The offset of the data being received within the piece. |
+| `piece` | `uint32` | The piece number of the file. |
+| `offset` | `uint32` | The offset of the data being received within the piece. |
 | `data` | `byte[]` | The data of the piece. |
