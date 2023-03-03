@@ -126,7 +126,7 @@ Packets are sent as a single UDP datagram. The first byte of the datagram is the
 | ---- | ----------- |
 | `boolean` | A single byte, either `0x00` or `0x01`. |
 | `string` | The length of the string encoded as a Protocol Buffer VarInt, followed by the string in UTF-8 encoded bytes. |
-| `byte[]` | The length of the byte array encoded as a Protocol Buffer VarInt, followed by the byte array. |
+| `byte[]` | The length of the byte array encoded as a Protocol Buffer VarInt, followed by the byte array. If the length is specified, there is no VarInt prefixed. |
 
 ### Type 0x00: Handshake Request
 
@@ -136,10 +136,11 @@ The handshake packet is sent by the downloader to the uploader or server to init
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| `version` | `uint8` | The version of the protocol. This must be `1`. |
 | `token` | `string` | The token to download the file. In case of direct transfers, this is the download token. In case of proxied transfers, this is the proxying token, from which the download token can be inferred by the proxies/uploaders/downloaders. |
-| `encryption` | `boolean` | Whether or not to enable encryption. This is not present when an uploader connects to a proxy server. |
-| `shared_secret` | `string` (optional) | The shared secret to use for encryption, encrypted with the uploader's public key. Only present when `encryption` is set to `true`. |
-| `iv` | `string` (optional) | The initialization vector to use for encryption, encrypted with the uploader's public key. Only present when `encryption` is set to `true`. |
+| `encrypt` | `boolean` | Whether or not to enable encryption. This is not present when an uploader connects to a proxy server. |
+| `shared_secret` | `byte[16]` (optional) | The shared secret to use for encryption, encrypted with the uploader's public key. Only present when `encrypt` is set to `true`. |
+| `iv` | `byte[16]` (optional) | The initialization vector to use for encryption, encrypted with the uploader's public key. Only present when `encrypt` is set to `true`. |
 
 ### Type 0x00: Handshake Response
 
@@ -150,6 +151,7 @@ This packet is sent by the uploader in response to a handshake.
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | `success` | `boolean` | Whether or not the handshake was successful. |
+| `encrypt` | `boolean` | Whether or not to enable encryption. |
 
 ### Type 0x01: Request File Piece
 
@@ -171,7 +173,7 @@ This packet is sent by the uploader to the downloader to send information about 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | `piece` | `uint32` | The piece number of the file. |
-| `hash` | `byte[]` | The SHA256 hash of the piece. |
+| `hash` | `byte[32]` | The SHA256 hash of the piece. |
 
 ### Type 0x02: File Piece Data
 
