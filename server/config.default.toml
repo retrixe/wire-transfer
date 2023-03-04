@@ -11,5 +11,8 @@ key = ""
 
 # TODO: Add configuration for encryption (mandatory, optional, disabled)
 # TODO: Add configuration for supporting proxied and direct connections.
+# TODO: Add configuration for default file info expiry time.
 # TODO: Add configuration for UDP timeouts.
 # TODO: Split TCP and UDP port options.
+# TODO: When precaching is implemented, add configuration for supporting
+#       it and changing the default file data expiry separate from info.
