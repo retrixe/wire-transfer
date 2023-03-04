@@ -8,3 +8,8 @@ enabled = false
 cert = ""
 # Path to HTTPS private key.
 key = ""
+
+# TODO: Add configuration for encryption (mandatory, optional, disabled)
+# TODO: Add configuration for supporting proxied and direct connections.
+# TODO: Add configuration for UDP timeouts.
+# TODO: Split TCP and UDP port options.

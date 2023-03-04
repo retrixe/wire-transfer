@@ -6,6 +6,8 @@ import (
 	"strconv"
 )
 
+// TODO: Implement precaching.
+
 func main() {
 	LoadConfig()
 

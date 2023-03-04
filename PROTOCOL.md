@@ -22,6 +22,10 @@ This mode is primarily aimed at users which don't support or enable port forward
 
 In proxied transfer mode, the requesting client makes a request at `/download/proxied`. If proxied transfer is supported by the uploader, the server generates a token and sends it to the uploader. The uploader then connects via UDP and sends the token, following which the server responds to the requester's HTTP request with the temporary token. The requester then connects to the server via UDP and sends the token. The server then relays the file between the uploader and the requester. The uploader and downloader are responsible for encrypting and decrypting the file, and the server is responsible for relaying the file.
 
+### Why not use UDP everywhere, instead of just the transfer protocol?
+
+UDP is considerably harder to use, and HTTPS prevents any man-in-the-middle attacks by establishing a chain of trust. In future versions, we may reconsider this design decision, however, for now it works well and is easy to implement.
+
 ## HTTP API
 
 All request/response bodies use JSON.
