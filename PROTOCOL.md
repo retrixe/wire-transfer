@@ -8,7 +8,7 @@ This is a live document which serves as the reference for wire-transfer's protoc
 
 Wire Transfer relies upon a central server and various clients which connect to it. The server is responsible for maintaining a list of clients and their current status, and for coordinating the transfer of files between clients. The server may optionally implement caching on its end, to reduce the amount of data that needs to be transferred (however, the reference implementation does not currently implement this, although it may in the future).
 
-To transfer a file, a client first connects to the server and requests to upload a file via WebSocket at `/upload`. This request contains the file name, an Ed25519 public key (optionally, to support encryption), and the port on which the client is listening for requesting clients (if wishing to support direct transfer). The server responds to this request with a token which can be shared with other clients to download the file.
+To transfer a file, a client first connects to the server and requests to upload a file via WebSocket at `/upload`. This request contains the file name, an ECDH (Curve25519) public key (optionally, to support encryption), and the port on which the client is listening for requesting clients (if wishing to support direct transfer). The server responds to this request with a token which can be shared with other clients to download the file.
 
 While the uploader is connected via WebSocket, a requester can request the file using two modes, direct transfer and proxied transfer. The reference implementation prefers direct transfer, falling back to proxied transfer when direct transfer is unavailable, but clients can prefer/support either as they see fit.
 
@@ -39,7 +39,7 @@ All request/response bodies use JSON.
 | `name` | `string` | The name of the file to upload. |
 | `size` | `number` | The size of the file, in bytes. |
 | `hash` | `string` | The SHA256 hash of the file. |
-| `public_key` | `string` (optional) | The Ed25519 public key of the uploader. |
+| `public_key` | `string` (optional) | The public key of the uploader. |
 | `port` | `number` (optional) | The port on which the uploader is listening for direct transfers. |
 | `precache` | `boolean` (optional) | Hint to the server to try pre-cache the file. Pre-caching is not required for servers to implement. The reference implementation pre-caches by default. If you wish to avoid pre-caching as a client, set this to false explicitly. |
 
@@ -76,6 +76,7 @@ This endpoint may return 404 if the file is not available.
 | `name` | `string` | The name of the file. |
 | `size` | `number` | The size of the file, in bytes. |
 | `hash` | `string` | The SHA256 hash of the file. |
+| `public_key` | `string` (optional) | The public key of the uploader. |
 | `creation_time` | `number` | The time at which the file was created, in milliseconds since the UNIX epoch in UTC. |
 | `available` | `boolean` | Whether the file is available. |
 | `supports_direct` | `boolean` | Whether the file is available for direct transfer. |
@@ -98,6 +99,7 @@ This endpoint may return 404 if the file is not available, or 400 if the file is
 | `name` | `string` | The name of the file. |
 | `size` | `number` | The size of the file, in bytes. |
 | `hash` | `string` | The SHA256 hash of the file. |
+| `public_key` | `string` (optional) | The public key of the uploader. |
 | `creation_time` | `number` | The time at which the file was created, in milliseconds since the UNIX epoch in UTC. |
 | `ip` | `string` | The IP address of the uploader. |
 | `port` | `number` | The port on which the uploader is listening for direct transfers. |
@@ -119,6 +121,7 @@ This endpoint may return 404 if the file is not available, or 400 if the file is
 | `name` | `string` | The name of the file. |
 | `size` | `number` | The size of the file, in bytes. |
 | `hash` | `string` | The SHA256 hash of the file. |
+| `public_key` | `string` (optional) | The public key of the uploader. |
 | `creation_time` | `number` | The time at which the file was created, in milliseconds since the UNIX epoch in UTC. |
 | `token` | `string` | The token to download the file. |
 
@@ -128,7 +131,7 @@ The UDP protocol is used for transferring files.
 
 ### Packet Format
 
-Packets are sent as a single UDP datagram. The first byte of the datagram is the packet type, followed by the packet data. When encryption is enabled, the contents of the packet are encrypted with AES-128-CBC.
+Packets are sent as a single UDP datagram. The first byte of the datagram is the packet type, followed by the packet data. When encryption is enabled, the contents of the packet are encrypted with AES-128-CBC, for which the shared secret is derived from the ECDH (Curve25519) key pairs exchanged by the uploader and downloader.
 
 ### Data Types
 
@@ -149,8 +152,8 @@ The handshake packet is sent by the downloader to the uploader or server to init
 | `version` | `uint8` | The version of the protocol. This must be `1`. |
 | `token` | `string` | The token to download the file. In case of direct transfers, this is the download token. In case of proxied transfers, this is the proxying token, from which the download token can be inferred by the proxies/uploaders/downloaders. |
 | `encrypt` | `boolean` | Whether or not to enable encryption. This is not present when an uploader connects to a proxy server. |
-| `shared_secret` | `byte[16]` (optional) | The shared secret to use for encryption, encrypted with the uploader's public key. Only present when `encrypt` is set to `true`. |
-| `iv` | `byte[16]` (optional) | The initialization vector to use for encryption, encrypted with the uploader's public key. Only present when `encrypt` is set to `true`. |
+| `public_key` | `byte[]` (optional) | The downloader's public key. Only present when `encrypt` is set to `true`. |
+| `iv` | `byte[16]` (optional) | The initialization vector to use. Only present when `encrypt` is set to `true`. |
 
 ### Type 0x00: Handshake Response
 
