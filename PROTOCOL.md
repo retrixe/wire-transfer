@@ -47,7 +47,10 @@ All request/response bodies use JSON.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| `success` | `boolean` | Whether the request was successful. If the request failed, only the `error` field will be returned. |
+| `error` | `string` (optional) | The error message, if the request was not successful. This is an implementation detail, and may not be always present. |
 | `token` | `string` | The token which can be used to download the file. |
+| `creation_time` | `number` | The time at which the file was created, in milliseconds since the UNIX epoch in UTC. |
 | `precache` | `boolean` | Whether the file will be precached by the server. |
 
 **Clientbound Request for Proxied Transfer:**
@@ -73,6 +76,7 @@ This endpoint may return 404 if the file is not available.
 | `name` | `string` | The name of the file. |
 | `size` | `number` | The size of the file, in bytes. |
 | `hash` | `string` | The SHA256 hash of the file. |
+| `creation_time` | `number` | The time at which the file was created, in milliseconds since the UNIX epoch in UTC. |
 | `available` | `boolean` | Whether the file is available. |
 | `supports_direct` | `boolean` | Whether the file is available for direct transfer. |
 | `supports_proxied` | `boolean` | Whether the file is available for proxied transfer. |
@@ -94,6 +98,7 @@ This endpoint may return 404 if the file is not available, or 400 if the file is
 | `name` | `string` | The name of the file. |
 | `size` | `number` | The size of the file, in bytes. |
 | `hash` | `string` | The SHA256 hash of the file. |
+| `creation_time` | `number` | The time at which the file was created, in milliseconds since the UNIX epoch in UTC. |
 | `ip` | `string` | The IP address of the uploader. |
 | `port` | `number` | The port on which the uploader is listening for direct transfers. |
 
@@ -114,6 +119,7 @@ This endpoint may return 404 if the file is not available, or 400 if the file is
 | `name` | `string` | The name of the file. |
 | `size` | `number` | The size of the file, in bytes. |
 | `hash` | `string` | The SHA256 hash of the file. |
+| `creation_time` | `number` | The time at which the file was created, in milliseconds since the UNIX epoch in UTC. |
 | `token` | `string` | The token to download the file. |
 
 ## UDP Protocol API
