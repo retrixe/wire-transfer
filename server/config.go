@@ -20,6 +20,16 @@ type Config struct {
 		Cert    string `toml:"cert"`
 		Key     string `toml:"key"`
 	} `toml:"https"`
+	SupportDirectTransfers  bool `toml:"support_direct_transfers"`
+	SupportProxiedTransfers bool `toml:"support_proxied_transfers"`
+	AllowEncryption         bool `toml:"allow_encryption"`
+	RequireEncryption       bool `toml:"require_encryption"`
+	DefaultFileExpiryTime   int  `toml:"default_file_expiry_time"`
+	MaxFileExpiryTime       int  `toml:"max_file_expiry_time"`
+	Advanced                struct {
+		UDPPort            int `toml:"udp_port"`
+		UDPTimeoutDuration int `toml:"udp_timeout_duration"`
+	} `toml:"advanced"`
 }
 
 func LoadConfig() {

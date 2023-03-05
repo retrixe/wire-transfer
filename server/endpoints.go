@@ -29,15 +29,20 @@ func uploadEndpoint(w http.ResponseWriter, r *http.Request) {
 		conn.Close(websocket.StatusProtocolError, "Failed to parse JSON for upload request!")
 		return
 	}
+
+	// TODO: Validate all fields (limits, support for either/both direct/proxy transfer).
+
 	id := gonanoid.MustGenerate(idChars, 8)
-	file := File{
+	file := &File{
 		Name:         uploadRequest.Name,
 		Size:         uploadRequest.Size,
 		Hash:         uploadRequest.Hash,
 		CreationTime: time.Now(),
-		PublicKey:    uploadRequest.PublicKey,
-		Port:         uploadRequest.Port,
-		Client:       conn,
+		// TODO: Expiry time should be per-file with client hint (when protocol is added).
+		ExpiryTime: config.DefaultFileExpiryTime,
+		PublicKey:  uploadRequest.PublicKey,
+		Port:       uploadRequest.Port,
+		Client:     conn,
 	}
 	files.Store(id, file)
 	response, err := json.Marshal(core.WsUploadResponseSuccess{
@@ -51,6 +56,27 @@ func uploadEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	conn.Write(r.Context(), websocket.MessageText, response)
 
-	// TODO: Keep monitoring the connection for disconnection. If the client disconnects, remove the client from the file.
-	// TODO: Setup a timer to remove the file if the client doesn't connect within a certain amount of time.
+	// Keep monitoring the connection for disconnection.
+	// If the client disconnects, remove the client from the file.
+	for {
+		_, _, err := conn.Read(r.Context())
+		if err != nil {
+			file.Client = nil
+			file.Reconnect = make(chan bool, 1)
+			// Setup a timer to remove the file if the client doesn't reconnect within a certain amount of time.
+			go func() {
+				var response interface{}
+				switch response {
+				case file.ExpiryTime < 0:
+					return
+				case <-time.After(time.Duration(file.ExpiryTime) * time.Second):
+					files.Delete(id)
+					return
+				case <-file.Reconnect:
+					return
+				}
+			}()
+			break
+		}
+	}
 }
