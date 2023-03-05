@@ -7,6 +7,7 @@ import (
 )
 
 // TODO: Implement precaching.
+// TODO: Implement upload resume after it is added to the spec.
 
 func main() {
 	LoadConfig()

@@ -9,10 +9,32 @@ cert = ""
 # Path to HTTPS private key.
 key = ""
 
-# TODO: Add configuration for encryption (mandatory, optional, disabled)
-# TODO: Add configuration for supporting proxied and direct connections.
-# TODO: Add configuration for default file info expiry time.
-# TODO: Add configuration for UDP timeouts.
-# TODO: Split TCP and UDP port options.
+# TODO: Support and refine this.
+[options]
+# Support direct transfers between an uploader and downloaders, bypassing the server.
+support_direct_transfers = true
+
+# Support proxied transfers where the server acts as a proxy between the uploader and downloaders.
+support_proxied_transfers = true
+
+# Allow encrypted file transfers.
+allow_encryption = true
+
+# Require encryption for all files.
+require_encryption = false
+
+# Configure how long file information is stored before it is removed (in seconds).
+# The longer this is, the more time the uploader has to reconnect, and downloaders
+# to check for its availability and metadata.
+default_file_expiry_time = 86400
+
+[advanced]
+# Configure UDP timeout duration in milliseconds.
+udp_timeout_duration = 30000
+
+# Configure the port on which the server should listen for UDP connections.
+# Setting this to -1 defaults to the same port as the HTTP server (ie TCP).
+udp_port = -1
+
 # TODO: When precaching is implemented, add configuration for supporting
 #       it and changing the default file data expiry separate from info.
