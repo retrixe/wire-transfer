@@ -14,6 +14,11 @@ func main() {
 
 	// Register endpoints.
 	http.HandleFunc("/upload", uploadEndpoint)
+	// TODO: Implement GET /info
+	// TODO: Implement GET /download/direct
+	// TODO: Implement GET /download/proxied
+
+	// TODO: Implement the UDP proxying protocol.
 
 	log.Println("Listening on port", config.Port)
 	if config.HTTPS.Enabled {

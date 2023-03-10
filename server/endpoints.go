@@ -62,21 +62,27 @@ func uploadEndpoint(w http.ResponseWriter, r *http.Request) {
 		_, _, err := conn.Read(r.Context())
 		if err != nil {
 			file.Client = nil
-			file.Reconnect = make(chan bool, 1)
-			// Setup a timer to remove the file if the client doesn't reconnect within a certain amount of time.
-			go func() {
-				var response interface{}
-				switch response {
-				case file.ExpiryTime < 0:
-					return
-				case <-time.After(time.Duration(file.ExpiryTime) * time.Second):
-					files.Delete(id)
-					return
-				case <-file.Reconnect:
-					return
-				}
-			}()
-			break
+			// Reconnection is only allowed if encryption was supported, else client is untrustworthy.
+			if file.PublicKey == "" {
+				files.Delete(id)
+				return
+			} else {
+				file.Reconnect = make(chan bool, 1)
+				// Setup a timer to remove the file if the client doesn't reconnect within a certain amount of time.
+				go func() {
+					var response interface{}
+					switch response {
+					case file.ExpiryTime < 0:
+						return
+					case <-time.After(time.Duration(file.ExpiryTime) * time.Second):
+						files.Delete(id)
+						return
+					case <-file.Reconnect:
+						return
+					}
+				}()
+				break
+			}
 		}
 	}
 }
