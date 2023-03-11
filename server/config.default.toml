@@ -1,19 +1,6 @@
 # The port to listen on.
 port = 14776
 
-# Whether or not to enable HTTPS.
-https.enabled = false
-
-# Paths to HTTPS certificate and private keys, if enabled.
-https.cert = ""
-https.key = ""
-
-# Support direct transfers between an uploader and downloaders, bypassing the server.
-support_direct_transfers = true
-
-# Support proxied transfers where the server acts as a proxy between the uploader and downloaders.
-support_proxied_transfers = true
-
 # Allow encrypted file transfers.
 allow_encryption = true
 
@@ -29,15 +16,9 @@ default_file_expiry_time = 86400
 # -1 means the file will never expire.
 max_file_expiry_time = 86400
 
-[advanced]
-# Configure the port on which the server should listen for UDP connections.
-# Setting this to -1 defaults to the same port as the HTTP server (ie TCP).
-udp_port = -1
-
 # Configure UDP timeout duration in milliseconds.
 udp_timeout_duration = 30000
 
 # TODO: Add some file size, download count or bandwidth limit? Maybe
 #       this could be negotiated by the client too as part of the spec.
-# TODO: When precaching is implemented, add configuration for supporting
-#       it and changing the default file data expiry separate from info.
+# TODO: Add configuration for expiring file data earlier than file info.

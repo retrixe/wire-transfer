@@ -1,13 +1,9 @@
 package main
 
-import "encoding/json"
+import gonanoid "github.com/matoous/go-nanoid/v2"
 
 const idChars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-func errorJson(error string) string {
-	json, err := json.Marshal(map[string]string{"error": error})
-	if err != nil {
-		panic(err)
-	}
-	return string(json)
+func generateFileId() string {
+	return gonanoid.MustGenerate(idChars, 8)
 }

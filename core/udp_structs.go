@@ -5,13 +5,6 @@ import (
 	"errors"
 )
 
-type PacketFrom int
-
-const (
-	PacketFromUploader   PacketFrom = iota
-	PacketFromDownloader PacketFrom = iota
-)
-
 const ProtocolVersion = 0x01
 
 var (
@@ -24,7 +17,12 @@ type Packet struct {
 	Parsed interface{}
 }
 
-type HandshakeRequest struct {
+type InformationPacket struct {
+	Version   uint8
+	PublicKey []byte
+}
+
+/* type HandshakeRequest struct {
 	Version      uint8
 	Token        string
 	Encrypt      bool
@@ -51,7 +49,7 @@ type FilePieceData struct {
 	Piece  uint32
 	Offset uint32
 	Data   []byte
-}
+} */
 
 func (packet *Packet) Serialize() []byte {
 	data := make([]byte, 4+len(packet.Data))
@@ -60,7 +58,22 @@ func (packet *Packet) Serialize() []byte {
 	return data
 }
 
-func CreateHandshakeRequest(token string, encrypt bool, sharedSecret []byte, iv []byte) *Packet {
+func CreateInformationPacket(version uint8, publicKey []byte) *Packet {
+	data := make([]byte, 2+len(publicKey))
+	data[0] = version
+	if publicKey != nil {
+		data[1] = 0x01
+		copy(data[1:], publicKey)
+	} else {
+		data[1] = 0x00
+	}
+	return &Packet{
+		ID:   0x00,
+		Data: data,
+	}
+}
+
+/* func CreateHandshakeRequest(token string, encrypt bool, sharedSecret []byte, iv []byte) *Packet {
 	data := make([]byte, 3+len(token))
 	data[0] = ProtocolVersion
 	n := binary.PutVarint(data[1:], int64(len(token)))
@@ -84,7 +97,7 @@ func CreateHandshakeResponse(success bool, encrypt bool) *Packet {
 		ID:   0x00,
 		Data: data,
 	}
-}
+} */
 
 func ParsePacket(data []byte) (*Packet, error) {
 	if len(data) < 4 {
@@ -96,7 +109,7 @@ func ParsePacket(data []byte) (*Packet, error) {
 	return packet, nil
 }
 
-func ParsePacketData(packet *Packet, from PacketFrom) error {
+/* func ParsePacketData(packet *Packet, from PacketFrom) error {
 	if from == PacketFromDownloader {
 		switch packet.ID {
 		case 0x00:
@@ -204,4 +217,4 @@ func boolToInt(b bool) uint8 {
 		return 0x01
 	}
 	return 0x00
-}
+} */

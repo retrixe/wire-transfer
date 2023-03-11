@@ -12,9 +12,8 @@ The protocol itself is only concerned with how clients can request information f
 
 ## To-dos
 
-- Add a way for the client to upload a file to the server. File metadata includes name, hash, size, creation time, expiry time, IP and port where others could attempt the direct download, and extra metadata.
-- Add a way to negotiate expiry time.
-- Formally specify timeouts (30s, if file transfer is not complete in 30s, the client should request the file again).
+- Add a way for the client to upload a file to the server. File metadata includes name, hash, size, creation time, expiry time, optional IP/port where others could attempt a direct download, and extra metadata. This should include a way to negotiate expiry time.
+- Add a way for clients to receive a file. In addition to aforementioned metadata, the file may be *unavailable*.
 - Flesh out a transfer protocol which splits the file into pieces and allows for the client to request a piece (or all pieces) from the server. Hashes of each piece should also be part of the file metadata?
 
 ## Protocol
@@ -24,6 +23,8 @@ The UDP protocol is used for transferring files. Packets are sent as a single UD
 Timeouts are left to implementations to decide. The reference implementation uses 30 seconds for downloads and 10 minutes for uploads to the server.
 
 ### Data Types
+
+Optional data is prefixed with a boolean that is true when the data is present.
 
 | Type | Description |
 | ---- | ----------- |
