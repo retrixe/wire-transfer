@@ -45,11 +45,10 @@ type InfoPacket struct {
 func CreateInfoPacket(version uint8, publicKey []byte) *Packet {
 	data := make([]byte, 2+len(publicKey))
 	data[0] = version
+	data[1] = boolToInt(publicKey != nil)
 	if publicKey != nil {
-		data[1] = 0x01
-		copy(data[1:], publicKey)
-	} else {
-		data[1] = 0x00
+		n := binary.PutVarint(data[2:], int64(len(publicKey)))
+		copy(data[2+n:], publicKey)
 	}
 	return &Packet{
 		ID:   0x00,

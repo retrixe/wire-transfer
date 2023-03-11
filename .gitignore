@@ -25,4 +25,5 @@
 # go.work - For now, we check this in.
 
 config.toml
+ed25519_keys.toml
 server/server
