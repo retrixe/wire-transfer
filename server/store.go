@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net"
 	"time"
 
 	"github.com/puzpuzpuz/xsync/v2"
@@ -16,3 +17,13 @@ type File struct {
 }
 
 var files = xsync.NewMapOf[*File]()
+
+type Connection struct {
+	Addr     *net.UDPAddr
+	LastSeen time.Time
+	// Send true when terminating the connection, false when simply indicating last seen.
+	TimeoutChan  chan bool
+	SharedSecret []byte
+}
+
+var connections = xsync.NewMapOf[*Connection]()

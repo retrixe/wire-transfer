@@ -12,7 +12,10 @@ var (
 )
 
 const (
-	InfoPacketId = 0x00
+	InfoPacketId              = 0x00
+	HandshakeRequestPacketId  = 0x01
+	HandshakeResponsePacketId = 0x01
+	ClosePacketId             = 0x02
 )
 
 type Packet struct {
@@ -148,4 +151,115 @@ func ParseInfoPacket(packet *Packet) (*InfoPacket, error) {
 		MaxExpiryTime: maxExpiryTime,
 		Info:          info,
 	}, nil
+}
+
+type HandshakeRequestPacket struct {
+	Version   uint8
+	PublicKey []byte
+}
+
+func CreateHandshakeRequestPacket(publicKey []byte) *Packet {
+	data := make([]byte, 2)
+	data[0] = ProtocolVersion
+	data[1] = boolToInt(publicKey != nil)
+	if publicKey != nil {
+		data = binary.AppendVarint(data, int64(len(publicKey)))
+		data = append(data, publicKey...)
+	}
+	return &Packet{
+		ID:   0x01,
+		Data: data,
+	}
+}
+
+func ParseHandshakeRequestPacket(packet *Packet) (*HandshakeRequestPacket, error) {
+	if len(packet.Data) < 1 {
+		return nil, ErrInvalidPacket
+	}
+	data := packet.Data
+
+	version := data[0]
+	data = data[1:]
+
+	var publicKey []byte = nil
+	if data[0] == 0x01 {
+		if len(data) < 2 {
+			return nil, ErrInvalidPacket
+		}
+		n, nLen := binary.Varint(data[1:])
+		if nLen <= 0 || len(data) < 1+nLen+int(n) {
+			return nil, ErrInvalidPacket
+		}
+		publicKey = data[1+nLen : 1+nLen+int(n)]
+		// data = data[1+nLen+int(n):] } else { data = data[1:]
+	}
+	return &HandshakeRequestPacket{Version: version, PublicKey: publicKey}, nil
+}
+
+type HandshakeResponsePacket struct {
+	Version       uint8
+	PublicKey     []byte
+	MaxFileSize   uint64
+	MaxExpiryTime uint64
+	Info          string
+}
+
+func CreateHandshakeResponsePacket(version uint8, publicKey []byte, maxFileSize *int, maxExpiryTime *int, info string) *Packet {
+	packet := CreateInfoPacket(version, publicKey, maxFileSize, maxExpiryTime, info)
+	return &Packet{
+		ID:   0x02,
+		Data: packet.Data,
+	}
+}
+
+func ParseHandshakeResponsePacket(packet *Packet) (*HandshakeResponsePacket, error) {
+	p, err := ParseInfoPacket(packet)
+	if err != nil {
+		return nil, err
+	}
+	return &HandshakeResponsePacket{
+		Version:       p.Version,
+		PublicKey:     p.PublicKey,
+		MaxFileSize:   p.MaxFileSize,
+		MaxExpiryTime: p.MaxExpiryTime,
+		Info:          p.Info,
+	}, nil
+}
+
+type ClosePacket struct {
+	Error string
+}
+
+func CreateClosePacket(error string) *Packet {
+	data := make([]byte, 1)
+	data[0] = boolToInt(error != "")
+	if error != "" {
+		data = binary.AppendVarint(data, int64(len([]byte(error))))
+		data = append(data, []byte(error)...)
+	}
+	return &Packet{
+		ID:   0x03,
+		Data: data,
+	}
+}
+
+func ParseClosePacket(packet *Packet) (*ClosePacket, error) {
+	if len(packet.Data) < 1 {
+		return nil, ErrInvalidPacket
+	}
+	data := packet.Data
+
+	var error string = ""
+	if data[0] == 0x01 {
+		if len(data) < 2 {
+			return nil, ErrInvalidPacket
+		}
+		n, nLen := binary.Varint(data[1:])
+		if nLen <= 0 || len(data) < 1+nLen+int(n) {
+			return nil, ErrInvalidPacket
+		}
+		error = string(data[1+nLen : 1+nLen+int(n)])
+		// data = data[1+nLen+int(n):] } else { data = data[1:]
+	}
+	return &ClosePacket{Error: error}, nil
 }

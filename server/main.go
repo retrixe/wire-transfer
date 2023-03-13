@@ -32,10 +32,13 @@ func main() {
 			continue
 		}
 
-		respond := func(b []byte) { server.WriteToUDP(b, addr) }
 		switch packet.ID {
 		case core.InfoPacketId:
-			go HandleInfoPacket(packet, respond)
+			go HandleInfoPacket(packet, server, addr)
+		case core.HandshakeRequestPacketId:
+			go HandleHandshakePacket(packet, server, addr)
+		case core.ClosePacketId:
+			go HandleClosePacket(packet, server, addr)
 		}
 	}
 }

@@ -18,6 +18,9 @@ type KeyFile struct {
 var ecdhKey *ecdh.PrivateKey
 
 func LoadEncryptionKeys() {
+	if !config.AllowEncryption {
+		return
+	}
 	var keyFile KeyFile
 	keyFileData, err := os.ReadFile("ecdh_keys.toml")
 

@@ -45,3 +45,29 @@ This is a special packet used to request information from the server about itsel
 | `max_expiry_time` | `uint64` (optional) | The maximum time a file can be stored on the server, in milliseconds. |
 | `max_file_size` | `uint64` (optional) | The maximum size a file can be, in bytes. |
 | `info` | `string` (optional) | Extra information about the server. |
+
+## Type 0x01: Handshake
+
+This packet is used to establish a connection between two peers. The server will respond with a packet of type 0x01 as well.
+
+**Request Packet Data:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `version` | `uint8` | The version of the protocol. This must be `1`. |
+| `public_key` | `byte[]` (optional) | The client's ECDH (Curve25519) public key in PKIX, ASN.1 DER form. |
+
+**Response Packet Data:**
+
+Identical to the [information packet's response](#type-0x00-information). After this, the client and server will use the shared secret derived from the ECDH key pairs to encrypt all packets sent to each other (if exchanged by both sides).
+
+## Type 0x02: Close
+
+This packet is used to close a connection between two peers. This packet may optionally contain an error message.
+
+**Request Packet Data:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `error` | `string` (optional) | An error message to send to the other peer. |
+
