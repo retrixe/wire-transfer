@@ -3,13 +3,11 @@ package main
 import (
 	"crypto/ecdh"
 	"crypto/rand"
-	"crypto/x509"
-	"encoding/pem"
-	"errors"
 	"log"
 	"os"
 
 	"github.com/pelletier/go-toml/v2"
+	"github.com/retrixe/wire-transfer/core"
 )
 
 type KeyFile struct {
@@ -32,11 +30,11 @@ func LoadEncryptionKeys() {
 		ecdhKey = key
 
 		// Save them to file.
-		keyFile.PublicKey, err = MarshalPEMPublicKey(key.PublicKey())
+		keyFile.PublicKey, err = core.MarshalPEMPublicKey(key.PublicKey())
 		if err != nil {
 			log.Panicln("Failed to marshal server public key:", err)
 		}
-		keyFile.PrivateKey, err = MarshalPEMPrivateKey(key)
+		keyFile.PrivateKey, err = core.MarshalPEMPrivateKey(key)
 		if err != nil {
 			log.Panicln("Failed to marshal server private key:", err)
 		}
@@ -57,11 +55,11 @@ func LoadEncryptionKeys() {
 		log.Panicln("Failed to parse ecdh_keys.toml:", err)
 	}
 
-	publicKey, err := ParsePEMPublicKey(keyFile.PublicKey)
+	publicKey, err := core.ParsePEMPublicKey(keyFile.PublicKey)
 	if err != nil {
 		log.Panicln("Failed to parse server public key:", err)
 	}
-	privateKey, err := ParsePEMPrivateKey(keyFile.PrivateKey)
+	privateKey, err := core.ParsePEMPrivateKey(keyFile.PrivateKey)
 	if err != nil {
 		log.Panicln("Failed to parse server private key:", err)
 	}
@@ -69,44 +67,4 @@ func LoadEncryptionKeys() {
 		log.Panicln("Server public and private keys do not match!")
 	}
 	ecdhKey = privateKey
-}
-
-func MarshalPEMPublicKey(key *ecdh.PublicKey) (string, error) {
-	pkixKey, err := x509.MarshalPKIXPublicKey(key)
-	if err != nil {
-		return "", err
-	}
-	return string(pem.EncodeToMemory(&pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: pkixKey,
-	})), nil
-}
-
-func MarshalPEMPrivateKey(key *ecdh.PrivateKey) (string, error) {
-	pkcs8Key, err := x509.MarshalPKCS8PrivateKey(key)
-	if err != nil {
-		return "", err
-	}
-	return string(pem.EncodeToMemory(&pem.Block{
-		Type:  "PRIVATE KEY",
-		Bytes: pkcs8Key,
-	})), nil
-}
-
-func ParsePEMPublicKey(data string) (*ecdh.PublicKey, error) {
-	block, _ := pem.Decode([]byte(data))
-	if block == nil || block.Type != "PUBLIC KEY" {
-		return nil, errors.New("no valid PEM block found")
-	}
-	key, err := x509.ParsePKIXPublicKey(block.Bytes)
-	return key.(*ecdh.PublicKey), err
-}
-
-func ParsePEMPrivateKey(data string) (*ecdh.PrivateKey, error) {
-	block, _ := pem.Decode([]byte(data))
-	if block == nil || block.Type != "PRIVATE KEY" {
-		return nil, errors.New("no valid PEM block found")
-	}
-	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	return key.(*ecdh.PrivateKey), err
 }
