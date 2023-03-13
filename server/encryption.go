@@ -1,7 +1,7 @@
 package main
 
 import (
-	"crypto/ed25519"
+	"crypto/ecdh"
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/pem"
@@ -17,31 +17,26 @@ type KeyFile struct {
 	PrivateKey string `toml:"private_key"`
 }
 
-type KeyPair struct {
-	PublicKey  ed25519.PublicKey
-	PrivateKey ed25519.PrivateKey
-}
-
-var encryptionKeys *KeyPair
+var ecdhKey *ecdh.PrivateKey
 
 func LoadEncryptionKeys() {
 	var keyFile KeyFile
-	keyFileData, err := os.ReadFile("ed25519_keys.toml")
+	keyFileData, err := os.ReadFile("ecdh_keys.toml")
 
 	if err != nil && os.IsNotExist(err) {
 		// Generate new keys.
-		publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+		key, err := ecdh.X25519().GenerateKey(rand.Reader)
 		if err != nil {
 			log.Panicln("Failed to generate server key pair:", err)
 		}
-		encryptionKeys = &KeyPair{PublicKey: publicKey, PrivateKey: privateKey}
+		ecdhKey = key
 
 		// Save them to file.
-		keyFile.PublicKey, err = MarshalPEMPublicKey(publicKey)
+		keyFile.PublicKey, err = MarshalPEMPublicKey(key.PublicKey())
 		if err != nil {
 			log.Panicln("Failed to marshal server public key:", err)
 		}
-		keyFile.PrivateKey, err = MarshalPEMPrivateKey(privateKey)
+		keyFile.PrivateKey, err = MarshalPEMPrivateKey(key)
 		if err != nil {
 			log.Panicln("Failed to marshal server private key:", err)
 		}
@@ -49,17 +44,17 @@ func LoadEncryptionKeys() {
 		if err != nil {
 			log.Panicln("Failed to marshal encryption_keys.toml:", err)
 		}
-		err = os.WriteFile("ed25519_keys.toml", keyFileData, 0644)
+		err = os.WriteFile("ecdh_keys.toml", keyFileData, 0600)
 		if err != nil {
-			log.Panicln("Failed to create ed25519_keys.toml:", err)
+			log.Panicln("Failed to create ecdh_keys.toml:", err)
 		}
 	} else if err != nil {
-		log.Panicln("Failed to read ed25519_keys.toml:", err)
+		log.Panicln("Failed to read ecdh_keys.toml:", err)
 	}
 
 	err = toml.Unmarshal(keyFileData, &keyFile)
 	if err != nil {
-		log.Panicln("Failed to parse ed25519_keys.toml:", err)
+		log.Panicln("Failed to parse ecdh_keys.toml:", err)
 	}
 
 	publicKey, err := ParsePEMPublicKey(keyFile.PublicKey)
@@ -70,10 +65,13 @@ func LoadEncryptionKeys() {
 	if err != nil {
 		log.Panicln("Failed to parse server private key:", err)
 	}
-	encryptionKeys = &KeyPair{PublicKey: publicKey, PrivateKey: privateKey}
+	if !publicKey.Equal(privateKey.PublicKey()) {
+		log.Panicln("Server public and private keys do not match!")
+	}
+	ecdhKey = privateKey
 }
 
-func MarshalPEMPublicKey(key ed25519.PublicKey) (string, error) {
+func MarshalPEMPublicKey(key *ecdh.PublicKey) (string, error) {
 	pkixKey, err := x509.MarshalPKIXPublicKey(key)
 	if err != nil {
 		return "", err
@@ -84,7 +82,7 @@ func MarshalPEMPublicKey(key ed25519.PublicKey) (string, error) {
 	})), nil
 }
 
-func MarshalPEMPrivateKey(key ed25519.PrivateKey) (string, error) {
+func MarshalPEMPrivateKey(key *ecdh.PrivateKey) (string, error) {
 	pkcs8Key, err := x509.MarshalPKCS8PrivateKey(key)
 	if err != nil {
 		return "", err
@@ -95,20 +93,20 @@ func MarshalPEMPrivateKey(key ed25519.PrivateKey) (string, error) {
 	})), nil
 }
 
-func ParsePEMPublicKey(data string) (ed25519.PublicKey, error) {
+func ParsePEMPublicKey(data string) (*ecdh.PublicKey, error) {
 	block, _ := pem.Decode([]byte(data))
 	if block == nil || block.Type != "PUBLIC KEY" {
 		return nil, errors.New("no valid PEM block found")
 	}
 	key, err := x509.ParsePKIXPublicKey(block.Bytes)
-	return key.(ed25519.PublicKey), err
+	return key.(*ecdh.PublicKey), err
 }
 
-func ParsePEMPrivateKey(data string) (ed25519.PrivateKey, error) {
+func ParsePEMPrivateKey(data string) (*ecdh.PrivateKey, error) {
 	block, _ := pem.Decode([]byte(data))
 	if block == nil || block.Type != "PRIVATE KEY" {
 		return nil, errors.New("no valid PEM block found")
 	}
 	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	return key.(ed25519.PrivateKey), err
+	return key.(*ecdh.PrivateKey), err
 }

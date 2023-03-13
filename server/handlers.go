@@ -9,8 +9,8 @@ import (
 
 func HandleInfoPacket(packet *core.Packet, respond func([]byte)) {
 	var publicKey []byte = nil
-	if encryptionKeys != nil {
-		pKey, err := x509.MarshalPKIXPublicKey(encryptionKeys.PublicKey)
+	if ecdhKey != nil {
+		pKey, err := x509.MarshalPKIXPublicKey(ecdhKey.PublicKey())
 		if err != nil {
 			log.Println("Failed to marshal public key in response to info request!", err)
 			return

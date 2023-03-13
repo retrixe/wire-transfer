@@ -41,4 +41,4 @@ This is a special packet used to request information from the server about itsel
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | `version` | `uint8` | The version of the protocol. This must be `1`. |
-| `public_key` | `byte[]` (optional) | The server's Ed25519 public key. |
+| `public_key` | `byte[]` (optional) | The server's ECDH (Curve25519) public key in PKIX, ASN.1 DER form. |
