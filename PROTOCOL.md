@@ -12,7 +12,7 @@ The protocol itself is only concerned with how clients can request information f
 
 ## To-dos
 
-- Add a way for the client to upload a file to the server. File metadata includes name, hash, size, creation time, expiry time, optional IP/port where others could attempt a direct download, and extra metadata. This should include a way to negotiate expiry time.
+- Add a way for the client to upload a file to the server. File metadata includes name, hash, size, creation time, expiry time, optional IP where others could attempt a direct download, and extra metadata.
 - Add a way for clients to receive a file. In addition to aforementioned metadata, the file may be *unavailable*.
 - Flesh out a transfer protocol which splits the file into pieces and allows for the client to request a piece (or all pieces) from the server. Hashes of each piece should also be part of the file metadata?
 
@@ -42,3 +42,6 @@ This is a special packet used to request information from the server about itsel
 | ---- | ---- | ----------- |
 | `version` | `uint8` | The version of the protocol. This must be `1`. |
 | `public_key` | `byte[]` (optional) | The server's ECDH (Curve25519) public key in PKIX, ASN.1 DER form. |
+| `max_expiry_time` | `uint64` (optional) | The maximum time a file can be stored on the server, in milliseconds. |
+| `max_file_size` | `uint64` (optional) | The maximum size a file can be, in bytes. |
+| `info` | `string` (optional) | Extra information about the server. |

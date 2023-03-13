@@ -40,17 +40,33 @@ func ParsePacket(data []byte) (*Packet, error) {
 }
 
 type InfoPacket struct {
-	Version   uint8
-	PublicKey []byte
+	Version       uint8
+	PublicKey     []byte
+	MaxFileSize   uint64
+	MaxExpiryTime uint64
+	Info          string
 }
 
-func CreateInfoPacket(version uint8, publicKey []byte) *Packet {
+func CreateInfoPacket(version uint8, publicKey []byte, maxFileSize *int, maxExpiryTime *int, info string) *Packet {
 	data := make([]byte, 2)
 	data[0] = version
 	data[1] = boolToInt(publicKey != nil)
 	if publicKey != nil {
 		data = binary.AppendVarint(data, int64(len(publicKey)))
 		data = append(data, publicKey...)
+	}
+	data = append(data, boolToInt(maxFileSize != nil))
+	if maxFileSize != nil {
+		data = binary.BigEndian.AppendUint64(data, uint64(*maxFileSize))
+	}
+	data = append(data, boolToInt(maxExpiryTime != nil))
+	if maxExpiryTime != nil {
+		data = binary.BigEndian.AppendUint64(data, uint64(*maxExpiryTime))
+	}
+	data = append(data, boolToInt(info != ""))
+	if info != "" {
+		data = binary.AppendVarint(data, int64(len([]byte(info))))
+		data = append(data, []byte(info)...)
 	}
 	return &Packet{
 		ID:   0x00,
@@ -62,19 +78,74 @@ func ParseInfoPacket(packet *Packet) (*InfoPacket, error) {
 	if len(packet.Data) < 2 {
 		return nil, ErrInvalidPacket
 	}
+	data := packet.Data
+
+	version := data[0]
+	data = data[1:]
+
 	var publicKey []byte = nil
-	if packet.Data[1] == 0x01 {
-		if len(packet.Data) < 3 {
+	if data[0] == 0x01 {
+		if len(data) < 2 {
 			return nil, ErrInvalidPacket
 		}
-		n, nLen := binary.Varint(packet.Data[2:])
-		if nLen <= 0 || len(packet.Data) < 2+nLen+int(n) {
+		n, nLen := binary.Varint(data[1:])
+		if nLen <= 0 || len(data) < 1+nLen+int(n) {
 			return nil, ErrInvalidPacket
 		}
-		publicKey = packet.Data[2+nLen : 2+nLen+int(n)]
+		publicKey = data[1+nLen : 1+nLen+int(n)]
+		data = data[1+nLen+int(n):]
+	} else {
+		data = data[1:]
+	}
+
+	if len(data) < 1 {
+		return nil, ErrInvalidPacket
+	}
+	var maxFileSize uint64
+	if data[0] == 0x01 {
+		if len(data) < 9 {
+			return nil, ErrInvalidPacket
+		}
+		maxFileSize = binary.BigEndian.Uint64(data[1:9])
+		data = data[9:]
+	} else {
+		data = data[1:]
+	}
+
+	if len(data) < 1 {
+		return nil, ErrInvalidPacket
+	}
+	var maxExpiryTime uint64
+	if data[0] == 0x01 {
+		if len(data) < 9 {
+			return nil, ErrInvalidPacket
+		}
+		maxExpiryTime = binary.BigEndian.Uint64(data[1:9])
+		data = data[9:]
+	} else {
+		data = data[1:]
+	}
+
+	if len(data) < 1 {
+		return nil, ErrInvalidPacket
+	}
+	var info string = ""
+	if data[0] == 0x01 {
+		if len(data) < 2 {
+			return nil, ErrInvalidPacket
+		}
+		n, nLen := binary.Varint(data[1:])
+		if nLen <= 0 || len(data) < 1+nLen+int(n) {
+			return nil, ErrInvalidPacket
+		}
+		info = string(data[1+nLen : 1+nLen+int(n)])
+		// data = data[1+nLen+int(n):] } else { data = data[1:]
 	}
 	return &InfoPacket{
-		Version:   packet.Data[0],
-		PublicKey: publicKey,
+		Version:       version,
+		PublicKey:     publicKey,
+		MaxFileSize:   maxFileSize,
+		MaxExpiryTime: maxExpiryTime,
+		Info:          info,
 	}, nil
 }

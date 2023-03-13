@@ -31,7 +31,7 @@ var TrustInfo = &cli.Command{
 			return cli.Exit("Failed to connect to server!", 1)
 		}
 		defer conn.Close()
-		_, err = conn.Write(core.CreateInfoPacket(core.ProtocolVersion, nil).Serialize())
+		_, err = conn.Write(core.CreateInfoPacket(core.ProtocolVersion, nil, nil, nil, "").Serialize())
 		if err != nil {
 			return cli.Exit("Failed to send info packet to server!", 1)
 		}
@@ -68,7 +68,10 @@ var TrustInfo = &cli.Command{
 		}
 		pKeyEncoded := strings.Split(string(pKeyPemEncoded), "\n")[1]
 		log.Println("ECDH public key:", pKeyEncoded)
-		log.Println("Protocol version:", 1)
+		log.Println("Protocol version:", data.Version)
+		log.Println("Maximum acceptable file size:", data.MaxFileSize)
+		log.Println("Maximum acceptable expiry time:", data.MaxExpiryTime)
+		log.Println("Extra information:", data.Info)
 		return nil
 	},
 }

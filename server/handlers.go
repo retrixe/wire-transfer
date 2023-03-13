@@ -17,5 +17,10 @@ func HandleInfoPacket(packet *core.Packet, respond func([]byte)) {
 		}
 		publicKey = pKey
 	}
-	respond(core.CreateInfoPacket(core.ProtocolVersion, publicKey).Serialize())
+	respond(core.CreateInfoPacket(core.ProtocolVersion,
+		publicKey,
+		// TODO: Add config option for this
+		nil,
+		&config.MaxFileExpiryTime,
+		"Reference implementation").Serialize())
 }
