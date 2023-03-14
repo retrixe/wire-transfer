@@ -15,6 +15,9 @@ func main() {
 		Usage: "Transfer files over the internet efficiently, using direct peer-to-peer connections where possible.",
 		Commands: []*cli.Command{
 			cmd.TrustInfo,
+			// wire-transfer file-info [server address] [file ID]
+			// wire-transfer upload [server address] [file ID]
+			// wire-transfer download [server address] [file ID]
 		},
 		Suggest:                true,
 		EnableBashCompletion:   true,

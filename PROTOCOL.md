@@ -12,8 +12,6 @@ The protocol itself is only concerned with how clients can request information f
 
 ## To-dos
 
-- Add a way for the client to upload a file to the server. File metadata includes name, hash, size, creation time, expiry time, optional IP where others could attempt a direct download, and extra metadata.
-- Add a way for clients to receive a file. In addition to aforementioned metadata, the file may be *unavailable*.
 - Flesh out a transfer protocol which splits the file into pieces and allows for the client to request a piece (or all pieces) from the server. Hashes of each piece should also be part of the file metadata?
 
 ## Protocol
@@ -71,3 +69,48 @@ This packet is used to close a connection between two peers. This packet may opt
 | ---- | ---- | ----------- |
 | `error` | `string` (optional) | An error message to send to the other peer. |
 
+## Type 0x03: File Metadata
+
+This packet is used to request information about a file from the server. The server will respond with a packet of type 0x01 as well.
+
+**Request Packet Data:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `id` | `string` | The ID of the file to request information about. |
+
+**Response Packet Data:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `name` | `string` | The name of the file. |
+| `hash` | `byte[]` | The SHA-256 hash of the file. |
+| `size` | `uint64` | The size of the file in bytes. |
+| `available` | `boolean` | Whether or not the file is available for download. |
+| `creation_time` | `uint64` | The time the file was created, in milliseconds since the Unix epoch. |
+| `expiry_time` | `uint64` (optional) | The time the file will expire, in milliseconds since the Unix epoch. |
+| `direct_download_ip` | `string` (optional) | The IP address of the server where the file can be downloaded directly. |
+| `metadata` | `byte[]` (optional) | Extra metadata about the file. |
+
+## Type 0x04: File Upload
+
+This packet is used to upload a file to the server. The server will respond with a packet of type 0x02 as well.
+
+**Request Packet Data:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `name` | `string` | The name of the file. |
+| `hash` | `byte[]` | The SHA-256 hash of the file. |
+| `size` | `uint64` | The size of the file in bytes. |
+| `expiry_time` | `uint64` (optional) | The time the file will expire, in milliseconds since the Unix epoch. |
+| `direct_download_ip` | `string` (optional) | The IP address of the server where the file can be downloaded directly. |
+| `metadata` | `byte[]` (optional) | Extra metadata about the file. |
+
+**Response Packet Data:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `id` | `string` | The ID of the file. |
+| `creation_time` | `uint64` | The time the file was created, in milliseconds since the Unix epoch. |
+| `expiry_time` | `uint64` (optional) | The time the file will expire, in milliseconds since the Unix epoch. |
